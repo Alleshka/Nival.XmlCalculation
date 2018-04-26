@@ -32,8 +32,8 @@ namespace Nival.XmlCalculation
 
                 Task.WaitAll(taskArray);
                 var maxCalculations = calculationsList.OrderBy(x => x.Info.CalculateCount).Last().Info;
-                Console.WriteLine("\n" + new String('-', 15));
-                Console.WriteLine($"Max Value Calculations = {maxCalculations.CalculateCount} in File = {maxCalculations.FileName}");
+                Console.WriteLine("\n" + new String('-', 15) + "\n");
+                Console.WriteLine($"Максимальное число элементов = {maxCalculations.CalculateCount} в файле = {maxCalculations.FileName}");
 
                 Console.WriteLine("\n" + new String('-', 15));
                 Console.WriteLine("Список ошибок: ");
@@ -41,9 +41,8 @@ namespace Nival.XmlCalculation
                 {
                     if (calculation.GetSkippedInfo().Count() != 0)
                     {
-                        Console.WriteLine($"Файл {calculation.Info.FileName}: \n[");
+                        Console.WriteLine($"Файл {calculation.Info.FileName}: \n");
                         Console.WriteLine(calculation.GetSkippedInfo());
-                        Console.WriteLine("]\n");
                     }
                 }
             }

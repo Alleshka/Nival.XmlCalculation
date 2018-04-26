@@ -24,7 +24,7 @@ namespace Nival.XmlCalculation.Calculation
 
         public override string ToString()
         {
-            return $"FileName = {FileName}: Result = {Response}";
+            return $"Файл = {FileName}: Результат = {Response}";
         }
     }
     class SkippedElements
@@ -42,7 +42,9 @@ namespace Nival.XmlCalculation.Calculation
 
         public override string ToString()
         {
-            return $"ElemName: {ElemName}\nError: {Reason} \nFix: ({Fix})";
+            String response = $"Узел: {ElemName}\nОшибка: {Reason}";
+            if (Fix.Length!=0) response += $"\nСпособ исправления: ({Fix})";
+            return response + "\n\n";
         }
     }
 
@@ -164,34 +166,56 @@ namespace Nival.XmlCalculation.Calculation
 
             if (uidAttribute == null)
             {
-                skippedElemens.Add(new SkippedElements(calculationNode.OuterXml, "Отсутствует элемент uid", "Добавьте элемент uid"));
+                skippedElemens.Add(new SkippedElements(calculationNode.OuterXml, "Отсутствует элемент uid", "Добавьте элемент uid (Пример: <str name=\"uid\" value=\"6ee78645316debb65ff35488b8822b2a\"/>)"));
                 return null;
             }
 
             if(operandAttribute == null)
             {
-                skippedElemens.Add(new SkippedElements(calculationNode.OuterXml, "Отсутствует элемент operand", "Добавьте элемент operand"));
+                skippedElemens.Add(new SkippedElements(calculationNode.OuterXml, "Отсутствует элемент operand", "Добавьте элемент operand (Пример: <str name=\"operand\" value=\"divide\" />"));
                 return null;
             }
 
             if (modAttribute == null)
             {
-                skippedElemens.Add(new SkippedElements(calculationNode.OuterXml, "Отсутствует элемент mod", "Добавьте элемент mod"));
+                skippedElemens.Add(new SkippedElements(calculationNode.OuterXml, "Отсутствует элемент mod", "Добавьте элемент mod (Пример: <int name=\"mod\" value=\"3\" />"));
                 return null;
             }
 
-            Guid uid = Guid.Parse(uidAttribute.Value);
+            Guid uid = Guid.Empty;
             OperandType operand = OperandType.ADD;
+            double mod = 0;
+          
+            try
+            {
+                uid = Guid.Parse(uidAttribute.Value);
+            }
+            catch(FormatException ex)
+            {
+                skippedElemens.Add(new SkippedElements(calculationNode.OuterXml, ex.Message));
+                return null;
+            }
+
             try
             {
                 operand = ParseOperand(operandAttribute.Value);
             }
             catch (UnKnownOperandException ex)
             {
-                skippedElemens.Add(new SkippedElements(calculationNode.OuterXml, ex.Message, "Укажите один из приведённых операндов"));
+                skippedElemens.Add(new SkippedElements(calculationNode.OuterXml, ex.Message, $"Укажите один из приведённых операндов в аттрибут {operandAttribute.OuterXml}"));
                 return null;
             }
-            double mod = Convert.ToDouble(modAttribute.Value);
+
+            try
+            {
+                mod = Convert.ToDouble(modAttribute.Value);
+            }
+            catch(FormatException)
+            {
+                skippedElemens.Add(new SkippedElements(calculationNode.OuterXml, $"{modAttribute.Value} не является числом", $"Укажите число в аттрибут {modAttribute.OuterXml}"));
+                return null;
+            }
+
 
             calculation = new Calculation(uid, operand, mod);
             return calculation;
