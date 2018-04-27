@@ -27,13 +27,14 @@ namespace Nival.XmlCalculation.Calculation
             return $"Файл = {FileName}: Результат = {Response}";
         }
     }
+
     class SkippedElements
     {
         public String ElemName { get; private set; }
         public String Reason { get; private set; }
         public String Fix { get; private set; }
 
-        public SkippedElements(String elem, String msg, String fix = "")
+        public SkippedElements(String elem = "", String msg = "", String fix = "")
         {
             ElemName = elem;
             Reason = msg;
@@ -42,8 +43,10 @@ namespace Nival.XmlCalculation.Calculation
 
         public override string ToString()
         {
-            String response = $"Узел: {ElemName}\nОшибка: {Reason}";
-            if (Fix.Length!=0) response += $"\nСпособ исправления: ({Fix})";
+            StringBuilder response = new StringBuilder();
+            if (ElemName.Length != 0) response.Append($"Местоположение: {ElemName}");
+            if (Reason.Length != 0) response.Append($"\nОшибка: {Reason}");
+            if (Fix.Length != 0) response.Append($"\nСпособ исправления: ({Fix})");
             return response + "\n\n";
         }
     }
@@ -64,14 +67,19 @@ namespace Nival.XmlCalculation.Calculation
             skippedElemens = new List<SkippedElements>();
 
             XmlDocument xmlDocument = new XmlDocument();
-            xmlDocument.Load(path); // Считываем файл
-           
-
-            XmlNode calculationsNode = xmlDocument.DocumentElement; // Получаем корневой элемент calculations
-            foreach(XmlNode node in calculationsNode)
+            try
             {
-                Calculation calculation = ParseCalculationNode(node);
-                if (calculation != null) calculationList.Add(calculation);
+                xmlDocument.Load(path); // Считываем файл
+                XmlNode calculationsNode = xmlDocument.DocumentElement; // Получаем корневой элемент calculations
+                foreach (XmlNode node in calculationsNode)
+                {
+                    Calculation calculation = ParseCalculationNode(node);
+                    if (calculation != null) calculationList.Add(calculation);
+                }
+            }
+            catch (XmlException ex)
+            {
+                skippedElemens.Add(new SkippedElements($"Файл {path}", ex.Message));
             }
         }
 
@@ -111,14 +119,20 @@ namespace Nival.XmlCalculation.Calculation
             return response;
         }
 
-        public String GetSkippedInfo()
+        public int GetSkippedCount() => skippedElemens.Count;
+        public String GetSkippedDesription()
         {
             StringBuilder response = new StringBuilder();
+            String delimiter = new string('-', 12);
+
+            response.Append($"{delimiter} Файл - {fileName} ({skippedElemens.Count}) {delimiter}\n\n");
 
             foreach(var item in skippedElemens)
             {
                 response.Append(item.ToString());
             }
+
+            response.Append($"{delimiter}{delimiter}{delimiter}{delimiter}{delimiter}\n");
 
             return response.ToString();
         }
@@ -172,13 +186,13 @@ namespace Nival.XmlCalculation.Calculation
 
             if(operandAttribute == null)
             {
-                skippedElemens.Add(new SkippedElements(calculationNode.OuterXml, "Отсутствует элемент operand", "Добавьте элемент operand (Пример: <str name=\"operand\" value=\"divide\" />"));
+                skippedElemens.Add(new SkippedElements(calculationNode.OuterXml, "Отсутствует элемент operand", "Добавьте элемент operand (Пример: <str name=\"operand\" value=\"divide\" />)"));
                 return null;
             }
 
             if (modAttribute == null)
             {
-                skippedElemens.Add(new SkippedElements(calculationNode.OuterXml, "Отсутствует элемент mod", "Добавьте элемент mod (Пример: <int name=\"mod\" value=\"3\" />"));
+                skippedElemens.Add(new SkippedElements(calculationNode.OuterXml, "Отсутствует элемент mod", "Добавьте элемент mod (Пример: <int name=\"mod\" value=\"3\" />)"));
                 return null;
             }
 
