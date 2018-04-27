@@ -150,30 +150,37 @@ namespace Nival.XmlCalculation.Calculation
                 if (node.NodeType == XmlNodeType.Element)
                 {
                     // Парсим аттрибуты
-                    String attributeName = node.Attributes.GetNamedItem("name").Value; // Достаём имя аттрибута
-
-                    switch (attributeName)
+                    if (node.Attributes.GetNamedItem("name") != null)
                     {
-                        case "uid":
-                            {
-                                uidAttribute = node.Attributes.GetNamedItem("value");
-                                break;
-                            }
-                        case "operand":
-                            {
-                                operandAttribute = node.Attributes.GetNamedItem("value");
-                                break;
-                            }
-                        case "mod":
-                            {
-                                modAttribute = node.Attributes.GetNamedItem("value");
-                                break;
-                            }
-                        default:
-                            {
-                                // Ничего не делаем
-                                break;
-                            }
+                        String attributeName = node.Attributes.GetNamedItem("name").Value; // Достаём имя аттрибута
+                        switch (attributeName)
+                        {
+                            case "uid":
+                                {
+                                    uidAttribute = node.Attributes.GetNamedItem("value");
+                                    break;
+                                }
+                            case "operand":
+                                {
+                                    operandAttribute = node.Attributes.GetNamedItem("value");
+                                    break;
+                                }
+                            case "mod":
+                                {
+                                    modAttribute = node.Attributes.GetNamedItem("value");
+                                    break;
+                                }
+                            default:
+                                {
+                                    // Ничего не делаем
+                                    break;
+                                }
+                        }
+                    }
+                    else
+                    {
+                        skippedElemens.Add(new SkippedElements($"{node.OuterXml}", "Некорректный файл, отсутствует аттрибут name"));
+                        return null;
                     }
                 }
             }
